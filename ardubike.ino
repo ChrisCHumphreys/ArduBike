@@ -17,11 +17,11 @@ int down = -1;
 int scroll_offset = 0;
 int rand_0_4 = 0;
 int num_of_puddles = 0;
+int track_index = -128;
 
 
 void change_lanes(int);
 void scroll_road();
-bool isMud();
 
 void setup() {
   // put your setup code here, to run once:
@@ -47,20 +47,26 @@ void loop() {
       arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
     }
   }
-  
-  if (isMud() and num_of_puddles < 4) {
-    arduboy.drawBitmap(32, SCREEN_HEIGHT - rand_0_4 * 8, mud_tile, 8, 8, WHITE);
-    num_of_puddles += 1;
+
+  //draw the map
+  for (int i = 1; i <= TRACK_LENGTH; i++) {
+    for (int j = 1; j <= LANE_COUNT; j++) {
+      if (track1[i - 1][j - 1] == MUD) {
+        arduboy.drawBitmap(((TRACK_LENGTH * TRACK_ITEM_SIZE) - track_index) + (i - 1) * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (j * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
+      }
+    }
   }
+
+  track_index += 1;
+  
+  
   if (arduboy.justPressed(UP_BUTTON)) {
     change_lanes(up);
   }
+  
   if (arduboy.justPressed(DOWN_BUTTON)) {
     change_lanes(down);
   }
-
-  
-  rand_0_4 = random(5);
   
   arduboy.display();
 }
@@ -80,12 +86,4 @@ void scroll_road() {
   if (scroll_offset == -7) {
     scroll_offset = 0;
   }
-}
-
-bool isMud() {
-    int new_rand = random(5);
-    if (new_rand == 0) {
-      return true;
-    }
-    return false;
 }

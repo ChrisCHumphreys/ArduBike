@@ -3,8 +3,9 @@
 
 #define CLEAR           0
 #define MUD             1
-#define TRACK_LENGTH     5
-#define LANE_COUNT      4 
+#define TRACK_LENGTH    5
+#define LANE_COUNT      4
+#define TRACK_ITEM_SIZE 8 
 
 
 const int track1[TRACK_LENGTH][LANE_COUNT] = {
