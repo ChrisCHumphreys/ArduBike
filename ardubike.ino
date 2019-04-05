@@ -22,6 +22,7 @@ int track_index = -128;
 
 void change_lanes(int);
 void scroll_road();
+void draw_obstacle(int obstacle, int index_offset, int lane);
 
 void setup() {
   // put your setup code here, to run once:
@@ -52,13 +53,12 @@ void loop() {
   for (int i = 1; i <= TRACK_LENGTH; i++) {
     for (int j = 1; j <= LANE_COUNT; j++) {
       if (track1[i - 1][j - 1] == MUD) {
-        arduboy.drawBitmap(((TRACK_LENGTH * TRACK_ITEM_SIZE) - track_index) + (i - 1) * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (j * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
+        draw_obstacle(MUD, i - 1, j);
       }
     }
   }
 
   track_index += 1;
-  
   
   if (arduboy.justPressed(UP_BUTTON)) {
     change_lanes(up);
@@ -86,4 +86,8 @@ void scroll_road() {
   if (scroll_offset == -7) {
     scroll_offset = 0;
   }
+}
+
+void draw_obstacle(int obstacle, int index_offset, int lane) {
+  arduboy.drawBitmap(((TRACK_LENGTH) - track_index) + index_offset * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
 }
