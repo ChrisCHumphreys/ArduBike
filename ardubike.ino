@@ -6,11 +6,27 @@
 #include "sprites.h"
 #include "tracks.h"
 
+#define GAME_TITLE      0
+#define GAME_PLAY       1
+#define GAME_OVER       2
+#define LEVEL_INFINITE  0
+#define LEVEL_1         1
+#define CURRENT_TRACK   track1
+
 Arduboy2 arduboy;
 
 const int SCREEN_HEIGHT = 64;
 const int SCREEN_WIDTH = 128;
 const int rider_height = 16;
+const int MAX_NUM_OF_OBSTACLES = 6;
+
+struct random_obstacle {
+  int obstacle_type;
+  int obstacle_lane;
+  int obstacle_x;
+  bool isActive;
+};
+
 int lane_shift = 0;
 int up = 1;
 int down = -1;
@@ -18,11 +34,17 @@ int scroll_offset = 0;
 int rand_0_4 = 0;
 int num_of_puddles = 0;
 int track_index = -128;
+int gamestate = GAME_TITLE;
+int mode = LEVEL_1;
+int obstacle_count = 0;
 
+random_obstacle current_obstacles[MAX_NUM_OF_OBSTACLES];
 
 void change_lanes(int);
 void scroll_road();
 void draw_obstacle(int obstacle, int index_offset, int lane);
+void title_screen();
+void game_play(int mode);
 
 void setup() {
   // put your setup code here, to run once:
@@ -30,43 +52,40 @@ void setup() {
   arduboy.setFrameRate(60);
   // TODO: use initRandomSeed after user presses a button
   arduboy.initRandomSeed();
-  rand_0_4 = random(5);
+  //rand_0_4 = random(5);
+
+  // initialize our random obstacles array
+  for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
+//    if (random(0, 5) != 0) {
+//      current_obstacles[i].obstacle_type = CLEAR;
+//      current_obstacles[i].obstacle_lane = -1;
+//      current_obstacles[i].obstacle_x = -1;
+//      current_obstacles[i].isActive = false;
+//    } else {
+      current_obstacles[i].obstacle_type = MUD;
+      current_obstacles[i].obstacle_lane = 4;
+      current_obstacles[i].obstacle_x = SCREEN_WIDTH + 8;
+      current_obstacles[i].isActive = true;
+      obstacle_count += 1;
+    //}
+  } 
   arduboy.clear();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   if (!(arduboy.nextFrame())) return;
-  scroll_road();
   arduboy.pollButtons();
-  arduboy.clear();
-  arduboy.print("Welcome to Ardubike!");
-  arduboy.setCursor(0, 8);
-  arduboy.drawBitmap(4, SCREEN_HEIGHT - rider_height - 1 - lane_shift, rider_flat, 16, 16, WHITE);
-  for (int j = 1; j <= 4; j++) {
-    for (int i = -8; i < SCREEN_WIDTH + 8; i = i + 8) {
-      arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
-    }
-  }
-
-  //draw the map
-  for (int i = 1; i <= TRACK_LENGTH; i++) {
-    for (int j = 1; j <= LANE_COUNT; j++) {
-      if (track1[i - 1][j - 1] == MUD) {
-        draw_obstacle(MUD, i - 1, j);
-      }
-    }
-  }
-
-  track_index += 1;
   
-  if (arduboy.justPressed(UP_BUTTON)) {
-    change_lanes(up);
+  switch(gamestate) {
+    case GAME_TITLE:
+      title_screen();
+      break;
+    case GAME_PLAY:
+      game_play(mode);
+      break;
   }
   
-  if (arduboy.justPressed(DOWN_BUTTON)) {
-    change_lanes(down);
-  }
   
   arduboy.display();
 }
@@ -83,11 +102,85 @@ void change_lanes(int direction) {
 
 void scroll_road() {
   scroll_offset = scroll_offset - 1;
-  if (scroll_offset == -7) {
+  if (scroll_offset == -8) {
     scroll_offset = 0;
   }
 }
 
 void draw_obstacle(int obstacle, int index_offset, int lane) {
-  arduboy.drawBitmap(((TRACK_LENGTH) - track_index) + index_offset * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
+  if (mode != LEVEL_INFINITE) {
+    arduboy.drawBitmap(((TRACK_LENGTH) - track_index) + index_offset * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
+  } else {
+    arduboy.drawBitmap(index_offset + TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, WHITE);
+  }
+}
+
+void title_screen() {
+   arduboy.setCursor(0, 0);
+   arduboy.print("Welcome to Ardubike!\n");
+   arduboy.print("A: Level 1\n");
+   arduboy.print("B: Infinte Mode!");
+   if (arduboy.justPressed(A_BUTTON)) {
+    gamestate = GAME_PLAY;
+    mode = LEVEL_1;
+   }
+   if (arduboy.justPressed(B_BUTTON)) {
+    gamestate = GAME_PLAY;
+    arduboy.initRandomSeed();
+    mode = LEVEL_INFINITE;
+   }
+}
+
+void game_play(int MODE) {
+
+
+  arduboy.clear();
+
+  // get the road moving
+  scroll_road();
+
+  // draw the rider and set him on the road
+  arduboy.drawBitmap(4, SCREEN_HEIGHT - rider_height - 1 - lane_shift, rider_flat, 16, 16, WHITE);
+  for (int j = 1; j <= 4; j++) {
+    for (int i = -8; i < SCREEN_WIDTH + 8; i = i + 8) {
+      arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
+    }
+  }
+
+  //draw the map
+  if (mode == LEVEL_1) {
+    for (int i = 1; i <= TRACK_LENGTH; i++) {
+      for (int j = 1; j <= LANE_COUNT; j++) {
+        if (CURRENT_TRACK[i - 1][j - 1] == MUD) {
+          draw_obstacle(MUD, i - 1, j);
+        }
+      }
+    }
+  } else if ( mode == LEVEL_INFINITE) {
+     //randomly initialize current_obstacles
+//     for (int i = 0; i < MAX_NUMBER_OF_OBSTACLES; i++) {
+//      if (random(5) == 0) {
+//        current_obstacles[i].isActive = true;
+//        current_obstacles[i].obstacle_type = MUD;
+//        current_obstacles[i].obstacle_lane = random(4);
+//        current_obstacles[i].obstacle_x = SCREEN_WIDTH + 1;
+//      }
+//     }
+    for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
+      if (current_obstacles[i].isActive) {
+        draw_obstacle(current_obstacles[i].obstacle_type, current_obstacles[i].obstacle_x, current_obstacles[i].obstacle_lane);
+        current_obstacles[i].obstacle_x -= 1;
+      }
+    }
+  }
+
+  track_index += 1;
+  
+  if (arduboy.justPressed(UP_BUTTON)) {
+    change_lanes(up);
+  }
+  
+  if (arduboy.justPressed(DOWN_BUTTON)) {
+    change_lanes(down);
+  }
 }
