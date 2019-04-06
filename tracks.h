@@ -1,6 +1,8 @@
 #ifndef TRACKS_H
 #define TRACKS_H
 
+// These constants allow us to make human readable
+// tracks.  They do take up a lot of space though.
 #define CLEAR           0
 #define MUD             1
 #define TRACK_LENGTH    30
