@@ -10,6 +10,7 @@
 #include <Arduboy2.h>
 #include "sprites.h"
 #include "tracks.h"
+#include "obstacles.h"
 
 /**
  * Gameplay States
@@ -104,11 +105,26 @@ void scroll_road() {
 }
 
 void draw_mapped_obstacle(int obstacle, int index_offset, int lane) {
-  // slightly different from draw_random_obstacle as we have to track ithe index to move through our map
-  arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
-                     SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, 
-                     TRACK_ITEM_SIZE, 
-                     WHITE);
+  int this_item_size;
+  unsigned char* this_obstacle;
+  if (obstacle == MUD) {
+    this_obstacle = mud_tile;
+    this_item_size = TRACK_ITEM_SIZE;
+    // slightly different from draw_random_obstacle as we have to track ithe index to move through our map
+    arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), this_obstacle, TRACK_ITEM_SIZE, 
+                       TRACK_ITEM_SIZE, 
+                       WHITE);
+  } else if (obstacle == LLJ) {
+    this_obstacle = low_long_jump;
+    arduboy.fillRect(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index,
+                     SCREEN_HEIGHT - (lane * 40), 32, 40, INVERT);
+    arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - (lane * 40), this_obstacle, 32, 
+                       40, 
+                       WHITE);
+  }
+
 }
 
 void draw_random_obstacle(int obstacle, int x, int lane) {
@@ -161,6 +177,9 @@ void game_play(int MODE) {
       for (int j = 1; j <= LANE_COUNT; j++) {
         if (CURRENT_TRACK[i - 1][j - 1] == MUD) {
           draw_mapped_obstacle(MUD, i, j);
+        }
+        if (CURRENT_TRACK[i - 1][j - 1] == LLJ) {
+          draw_mapped_obstacle(LLJ, i, j);
         }
       }
     }
