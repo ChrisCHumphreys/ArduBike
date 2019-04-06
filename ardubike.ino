@@ -102,6 +102,8 @@ void draw_random_obstacle(int obstacle, int x, int lane) {
 }
 
 void title_screen() {
+   arduboy.clear();
+   track_index = 0;
    arduboy.setCursor(0, 0);
    arduboy.print("Welcome to Ardubike!\n");
    arduboy.print("A: Level 1\n");
@@ -113,28 +115,11 @@ void title_screen() {
    if (arduboy.justPressed(B_BUTTON)) {
     gamestate = GAME_PLAY;
     arduboy.initRandomSeed();
-    mode = LEVEL_INFINITE;
-    // initialize our random obstacles array
-//      for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
-//        if (random(0, 5) < 1) {
-//          current_obstacles[i].obstacle_type = CLEAR;
-//          current_obstacles[i].obstacle_lane = -1;
-//          current_obstacles[i].obstacle_x = -1;
-//          current_obstacles[i].isActive = false;
-//        } else {
-//          current_obstacles[i].obstacle_type = MUD;
-//          current_obstacles[i].obstacle_lane = random(1, 5);
-//          current_obstacles[i].obstacle_x = SCREEN_WIDTH + 8;
-//          current_obstacles[i].isActive = true;
-//          obstacle_count += 1;
-//        }
-//      } 
+    mode = LEVEL_INFINITE; 
    }
 }
 
 void game_play(int MODE) {
-
-
   arduboy.clear();
 
   // get the road moving
@@ -189,5 +174,9 @@ void game_play(int MODE) {
   
   if (arduboy.justPressed(DOWN_BUTTON)) {
     change_lanes(down);
+  }
+
+  if (arduboy.justPressed(B_BUTTON)) {
+    gamestate = GAME_TITLE;
   }
 }
