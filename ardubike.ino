@@ -33,7 +33,7 @@ int down = -1;
 int scroll_offset = 0;
 int rand_0_4 = 0;
 int num_of_puddles = 0;
-int track_index = -128;
+int track_index = 0;
 int gamestate = GAME_TITLE;
 int mode = LEVEL_1;
 int obstacle_count = 0;
@@ -42,7 +42,8 @@ random_obstacle current_obstacles[MAX_NUM_OF_OBSTACLES];
 
 void change_lanes(int);
 void scroll_road();
-void draw_obstacle(int obstacle, int index_offset, int lane);
+void draw_mapped_obstacle(int obstacle, int index_offset, int lane);
+void draw_random_obstacle(int obstacle, int x, int lane);
 void title_screen();
 void game_play(int mode);
 
@@ -53,22 +54,7 @@ void setup() {
   // TODO: use initRandomSeed after user presses a button
   arduboy.initRandomSeed();
   //rand_0_4 = random(5);
-
-  // initialize our random obstacles array
-  for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
-//    if (random(0, 5) != 0) {
-//      current_obstacles[i].obstacle_type = CLEAR;
-//      current_obstacles[i].obstacle_lane = -1;
-//      current_obstacles[i].obstacle_x = -1;
-//      current_obstacles[i].isActive = false;
-//    } else {
-      current_obstacles[i].obstacle_type = MUD;
-      current_obstacles[i].obstacle_lane = 4;
-      current_obstacles[i].obstacle_x = SCREEN_WIDTH + 8;
-      current_obstacles[i].isActive = true;
-      obstacle_count += 1;
-    //}
-  } 
+  
   arduboy.clear();
 }
 
@@ -107,12 +93,12 @@ void scroll_road() {
   }
 }
 
-void draw_obstacle(int obstacle, int index_offset, int lane) {
-  if (mode != LEVEL_INFINITE) {
-    arduboy.drawBitmap(((TRACK_LENGTH) - track_index) + index_offset * TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
-  } else {
-    arduboy.drawBitmap(index_offset + TRACK_ITEM_SIZE, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, WHITE);
-  }
+void draw_mapped_obstacle(int obstacle, int index_offset, int lane) {
+  arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
+}
+
+void draw_random_obstacle(int obstacle, int x, int lane) {
+  arduboy.drawBitmap(x, SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), mud_tile, TRACK_ITEM_SIZE, TRACK_ITEM_SIZE, WHITE);
 }
 
 void title_screen() {
@@ -128,6 +114,21 @@ void title_screen() {
     gamestate = GAME_PLAY;
     arduboy.initRandomSeed();
     mode = LEVEL_INFINITE;
+    // initialize our random obstacles array
+//      for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
+//        if (random(0, 5) < 1) {
+//          current_obstacles[i].obstacle_type = CLEAR;
+//          current_obstacles[i].obstacle_lane = -1;
+//          current_obstacles[i].obstacle_x = -1;
+//          current_obstacles[i].isActive = false;
+//        } else {
+//          current_obstacles[i].obstacle_type = MUD;
+//          current_obstacles[i].obstacle_lane = random(1, 5);
+//          current_obstacles[i].obstacle_x = SCREEN_WIDTH + 8;
+//          current_obstacles[i].isActive = true;
+//          obstacle_count += 1;
+//        }
+//      } 
    }
 }
 
@@ -152,23 +153,29 @@ void game_play(int MODE) {
     for (int i = 1; i <= TRACK_LENGTH; i++) {
       for (int j = 1; j <= LANE_COUNT; j++) {
         if (CURRENT_TRACK[i - 1][j - 1] == MUD) {
-          draw_obstacle(MUD, i - 1, j);
+          draw_mapped_obstacle(MUD, i, j);
         }
       }
     }
-  } else if ( mode == LEVEL_INFINITE) {
-     //randomly initialize current_obstacles
-//     for (int i = 0; i < MAX_NUMBER_OF_OBSTACLES; i++) {
-//      if (random(5) == 0) {
-//        current_obstacles[i].isActive = true;
-//        current_obstacles[i].obstacle_type = MUD;
-//        current_obstacles[i].obstacle_lane = random(4);
-//        current_obstacles[i].obstacle_x = SCREEN_WIDTH + 1;
-//      }
-//     }
+  } else if ( mode == LEVEL_INFINITE) { 
+    // Remove obstacles that have moved off screen
+    for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
+      if (current_obstacles[i].obstacle_x < -1 - TRACK_ITEM_SIZE) {
+        current_obstacles[i].isActive = false;
+      }
+    }
+    // Check incactive and give them a chance to get made.
+    for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
+      if (!current_obstacles[i].isActive and random(0, 50) == 1) {
+        current_obstacles[i].isActive = true;
+        current_obstacles[i].obstacle_type = MUD;
+        current_obstacles[i].obstacle_lane = random(1, 5);
+        current_obstacles[i].obstacle_x = 8 + SCREEN_WIDTH;
+      }
+    }
     for (int i = 0; i < MAX_NUM_OF_OBSTACLES; i++) {
       if (current_obstacles[i].isActive) {
-        draw_obstacle(current_obstacles[i].obstacle_type, current_obstacles[i].obstacle_x, current_obstacles[i].obstacle_lane);
+        draw_random_obstacle(current_obstacles[i].obstacle_type, current_obstacles[i].obstacle_x, current_obstacles[i].obstacle_lane);
         current_obstacles[i].obstacle_x -= 1;
       }
     }
