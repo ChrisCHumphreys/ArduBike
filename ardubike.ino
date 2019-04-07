@@ -52,6 +52,8 @@ int track_index = 0;
 int gamestate = GAME_TITLE;
 int mode = LEVEL_1;
 int obstacle_count = 0;
+bool wheelie = false; 
+int frame = 0;
 
 random_obstacle current_obstacles[MAX_NUM_OF_OBSTACLES];
 Arduboy2 arduboy;
@@ -117,6 +119,8 @@ void draw_mapped_obstacle(int obstacle, int index_offset, int lane) {
                        WHITE);
   } else if (obstacle == LLJ) {
     this_obstacle = low_long_jump;
+    //is_low_rising = true;
+    // paint the area behind the jump black first
     arduboy.fillRect(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index,
                      SCREEN_HEIGHT - (lane * 40), 32, 40, INVERT);
     arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
@@ -160,16 +164,15 @@ void title_screen() {
 void game_play(int MODE) {
   arduboy.clear();
 
-  // get the road moving
-  scroll_road();
-
-  // draw the rider and set him on the road
-  arduboy.drawBitmap(4, SCREEN_HEIGHT - RIDER_HEIGHT - 1 - lane_shift, rider_flat, 16, 16, WHITE);
+  // Draw the road
   for (int j = 1; j <= 4; j++) {
     for (int i = -8; i < SCREEN_WIDTH + 8; i = i + 8) {
       arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
     }
   }
+  
+  // get the road moving
+  scroll_road();
 
   //draw the map using map in tracks.h
   if (mode == LEVEL_1) {
@@ -180,6 +183,7 @@ void game_play(int MODE) {
         }
         if (CURRENT_TRACK[i - 1][j - 1] == LLJ) {
           draw_mapped_obstacle(LLJ, i, j);
+          
         }
       }
     }
@@ -211,6 +215,19 @@ void game_play(int MODE) {
     }
   }
 
+  // draw the rider
+  
+  arduboy.drawBitmap(4, SCREEN_HEIGHT - RIDER_HEIGHT - 1 - lane_shift, rider_low_incline[frame / 4], 16, 16, WHITE); 
+    
+  
+  // for animation testing
+  if (wheelie == true) {
+    if (frame < 15) {
+      frame += 1;
+    } else {
+       frame = 15;
+    }
+  }
   // Track index is like an index in an array the we are moving through as we play the game.
   track_index += 1;
   
@@ -225,5 +242,13 @@ void game_play(int MODE) {
   // Right now I am using B as a universal exit mode.
   if (arduboy.justPressed(B_BUTTON)) {
     gamestate = GAME_TITLE;
+  }
+
+  // Just to test animations
+  if (arduboy.pressed(A_BUTTON) and gamestate == GAME_PLAY) {
+    wheelie = true;
+  } else {
+    wheelie = false;
+    frame = 0;
   }
 }
