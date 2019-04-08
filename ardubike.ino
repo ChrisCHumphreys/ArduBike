@@ -54,12 +54,13 @@ int mode = LEVEL_1;
 int obstacle_count = 0;
 bool wheelie = false; 
 int frame = 0;
+int blocked_drawing_counter = 0;
 
 random_obstacle current_obstacles[MAX_NUM_OF_OBSTACLES];
 Arduboy2 arduboy;
 
 void change_lanes(int);
-void scroll_road();
+//void scroll_road();
 void draw_mapped_obstacle(int obstacle, int index_offset, int lane);
 void draw_random_obstacle(int obstacle, int x, int lane);
 void title_screen();
@@ -98,36 +99,65 @@ void change_lanes(int direction) {
   }
 }
 
-void scroll_road() {
-  // Uses values between 0 and -8 becuase the road tile is exacly 8 pixels wide
-  scroll_offset = scroll_offset - 1;
-  if (scroll_offset == -8) {
-    scroll_offset = 0;
-  }
-}
+//void scroll_road() {
+//  // Uses values between 0 and -8 becuase the road tile is exacly 8 pixels wide
+//  scroll_offset = scroll_offset - 1;
+//  if (scroll_offset == -8) {
+//    scroll_offset = 0;
+//  }
+//}
 
 void draw_mapped_obstacle(int obstacle, int index_offset, int lane) {
   int this_item_size;
   unsigned char* this_obstacle;
+  if (obstacle == CLEAR) {
+    this_obstacle = road_tile;
+    this_item_size = TRACK_ITEM_SIZE;
+    // slightly different from draw_random_obstacle as we have to track ithe index to move through our map
+    arduboy.drawBitmap((index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - ((lane + 1) * TRACK_ITEM_SIZE), this_obstacle, TRACK_ITEM_SIZE, 
+                       TRACK_ITEM_SIZE, 
+                       WHITE);
+  }
   if (obstacle == MUD) {
     this_obstacle = mud_tile;
     this_item_size = TRACK_ITEM_SIZE;
     // slightly different from draw_random_obstacle as we have to track ithe index to move through our map
-    arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
-                       SCREEN_HEIGHT - (lane * TRACK_ITEM_SIZE), this_obstacle, TRACK_ITEM_SIZE, 
+    arduboy.drawBitmap((index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - ((lane + 1) * TRACK_ITEM_SIZE), this_obstacle, TRACK_ITEM_SIZE, 
                        TRACK_ITEM_SIZE, 
                        WHITE);
-  } else if (obstacle == LLJ) {
+  }
+  if (obstacle == LLJ) {
     this_obstacle = low_long_jump;
     //is_low_rising = true;
     // paint the area behind the jump black first
-    arduboy.fillRect(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index,
-                     SCREEN_HEIGHT - (lane * 40), 32, 40, INVERT);
-    arduboy.drawBitmap(SCREEN_WIDTH + (index_offset * TRACK_ITEM_SIZE) - track_index, 
-                       SCREEN_HEIGHT - (lane * 40), this_obstacle, 32, 
+    arduboy.fillRect((index_offset * TRACK_ITEM_SIZE) - track_index,
+                     SCREEN_HEIGHT - (40), 32, 40, INVERT);
+    arduboy.drawBitmap((index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - (40), this_obstacle, 32, 
                        40, 
                        WHITE);
   }
+  if (obstacle == BUMP) {
+    this_obstacle = bump;
+    arduboy.fillRect((index_offset * TRACK_ITEM_SIZE) - track_index,
+                     SCREEN_HEIGHT - (36), 16, 36, INVERT);
+    arduboy.drawBitmap((index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - (36), this_obstacle, 16, 
+                       36, 
+                       WHITE);
+  }
+  if (obstacle == TALL) {
+    this_obstacle = tall_jump;
+    arduboy.fillRect((index_offset * TRACK_ITEM_SIZE) - track_index,
+                     SCREEN_HEIGHT - (48), 32, 48, INVERT);
+    arduboy.drawBitmap((index_offset * TRACK_ITEM_SIZE) - track_index, 
+                       SCREEN_HEIGHT - (48), this_obstacle, 32, 
+                       48, 
+                       WHITE);
+  }
+  
 
 }
 
@@ -165,28 +195,37 @@ void game_play(int MODE) {
   arduboy.clear();
 
   // Draw the road
-  for (int j = 1; j <= 4; j++) {
-    for (int i = -8; i < SCREEN_WIDTH + 8; i = i + 8) {
-      arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
-    }
-  }
+//  for (int j = 1; j <= 4; j++) {
+//    for (int i = -8; i < SCREEN_WIDTH + 8; i = i + 8) {
+//      arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE); 
+//    }
+//  }
   
   // get the road moving
-  scroll_road();
+  //scroll_road();
 
   //draw the map using map in tracks.h
-  if (mode == LEVEL_1) {
-    for (int i = 1; i <= TRACK_LENGTH; i++) {
-      for (int j = 1; j <= LANE_COUNT; j++) {
-        if (CURRENT_TRACK[i - 1][j - 1] == MUD) {
+  if (mode == LEVEL_1 and blocked_drawing_counter == 0) {
+    for (int i = 0; i < TRACK_LENGTH; i++) {
+      for (int j = 0; j < LANE_COUNT; j++) {
+        if (CURRENT_TRACK[i][j] == MUD) {
           draw_mapped_obstacle(MUD, i, j);
         }
-        if (CURRENT_TRACK[i - 1][j - 1] == LLJ) {
+        if (CURRENT_TRACK[i][j] == LLJ) {
           draw_mapped_obstacle(LLJ, i, j);
-          
+        }
+        if (CURRENT_TRACK[i][j] == BUMP) {
+          draw_mapped_obstacle(BUMP, i, j);
+        }
+        if (CURRENT_TRACK[i][j] == TALL) {
+          draw_mapped_obstacle(TALL, i, j);
+        }
+        if (CURRENT_TRACK[i][j] == CLEAR) {
+          draw_mapped_obstacle(CLEAR, i, j);
+          //arduboy.drawBitmap(i + scroll_offset, SCREEN_HEIGHT - j * 8, road_tile, 8, 8, WHITE);
         }
       }
-    }
+    } 
   // Draw the map using random obstacles
   } else if ( mode == LEVEL_INFINITE) { 
     // Remove obstacles that have moved off screen
@@ -213,6 +252,9 @@ void game_play(int MODE) {
         current_obstacles[i].obstacle_x -= 1;
       }
     }
+  }
+  if (blocked_drawing_counter != 0) {
+      blocked_drawing_counter -= 1;
   }
 
   // draw the rider
