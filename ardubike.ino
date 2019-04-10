@@ -25,10 +25,12 @@
 #define LEVEL_INFINITE  0
 
 int gamestate = GAME_TITLE;
-int surface = FLAT;
+int surface = CLEAR;
 int lane = 1;
 bool is_moving = false;
 unsigned int map_index = 0;
+int rider_frame = 0;
+int current_surface_index = 0;
 
 Arduboy2 arduboy;
 
@@ -69,6 +71,7 @@ void title_screen() {
 }
 
 void game_play() {
+  
   arduboy.clear();
 
   if (is_moving == true) {
@@ -78,17 +81,30 @@ void game_play() {
   arduboy.print("Map Index: ");
   arduboy.print(map_index);
   arduboy.print("\nSurface: ");
-  arduboy.print(surface);
+  arduboy.print(rider_frame);
 
   // draw line under game
   arduboy.fillRect(0, SCREEN_HEIGHT-1, SCREEN_WIDTH, 1);
-
+  
   surface = draw_track(track_1, map_index);
 
-  sprite.drawSelfMasked(4, SCREEN_HEIGHT - 12 - (lane * TILE_SIZE), ardurider, 0);
-
+  if (surface <= 4) {
+    rider_frame = 0;
+  }
+  
+  sprite.drawSelfMasked(4, SCREEN_HEIGHT - 12 - (lane * TILE_SIZE), ardurider, rider_frame);
+  
   if (arduboy.pressed(A_BUTTON)) {
     is_moving = true;
+    if (surface == 5 or surface == 6 and rider_frame < 2) {
+      if(arduboy.everyXFrames(4)) {
+        rider_frame += 1; 
+      }
+    } else if (surface == 7 and rider_frame < 1) {
+      if(arduboy.everyXFrames(4)) {
+        rider_frame += 1;
+      }
+    }
   } else {
     is_moving = false;
   }
