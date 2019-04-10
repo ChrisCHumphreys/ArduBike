@@ -296,15 +296,16 @@ void draw_bump(int x, int y) {
 
 }
 
-void draw_jump(int x, int y) {
-  draw_bump(x + TILE_SIZE, y);
-  sprite.drawSelfMasked(x, y + (TILE_SIZE / 2), tile_sheet, 8);
-  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y + (TILE_SIZE / 2), tile_sheet, 9);
-  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y + 12, tile_sheet, 11);
-  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y + 20, tile_sheet, 11);
-  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y + 28, tile_sheet, 11);
-  sprite.drawSelfMasked(x, y + 36, tile_sheet, 8);
-  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y + 36, tile_sheet, 10);
+void draw_flat_jump(int x, int y = 0) {
+  draw_bump(x + TILE_SIZE, SCREEN_HEIGHT - (6 * TILE_SIZE) + 3);
+  y_location = SCREEN_HEIGHT - ( 6 * TILE_SIZE) + 3;
+  sprite.drawSelfMasked(x, y_location + (TILE_SIZE / 2), tile_sheet, 8);
+  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y_location + (TILE_SIZE / 2), tile_sheet, 9);
+  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y_location + 12, tile_sheet, 11);
+  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y_location + 20, tile_sheet, 11);
+  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y_location + 28, tile_sheet, 11);
+  sprite.drawSelfMasked(x, y_location + 36, tile_sheet, 8);
+  sprite.drawSelfMasked(x + (TILE_SIZE * 3), y_location + 36, tile_sheet, 10);
 }
 
 void draw_track(int x, int mud_lane) {
@@ -359,6 +360,9 @@ void draw_track(int trackName[], unsigned int map_index) {
     } else if (*(trackName + counter) == JUMP) {
       draw_steep_mid_jump((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE));
       obstacle_offset += 2;
+    } else if (*(trackName + counter) == HUMP) {
+      draw_flat_jump((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE));
+      obstacle_offset += 3;
     }
     counter += 1;
     

@@ -25,7 +25,7 @@
 #define LEVEL_INFINITE  0
 
 int gamestate = GAME_TITLE;
-int frame = 0;
+int lane = 1;
 bool is_moving = false;
 unsigned int map_index = 0;
 
@@ -76,55 +76,27 @@ void game_play() {
 
   arduboy.print("Map Index: ");
   arduboy.print(map_index);
-  arduboy.print(" : ");
-
-  for (int i = 0; i < 15; i ++) {
-    arduboy.print(*(track_1 + i));
-  }
 
   // draw line under game
   arduboy.fillRect(0, SCREEN_HEIGHT-1, SCREEN_WIDTH, 1);
 
   draw_track(track_1, map_index);
-  
-//  for (int i = 0; i < (TILE_SIZE * 3); i += TILE_SIZE) {
-//    draw_track(i - map_index, -1);
-//  };
-//
-//  //(frame == 47) ? frame = 0 : frame += 1;
-//  //sprite.drawSelfMasked(0, 0, ardurider, frame/12);
-//  
-//  draw_steep_short_jump((TILE_SIZE * 3) - map_index);
-//
-//  for (int i = TILE_SIZE * 4; i < (TILE_SIZE * 8); i += TILE_SIZE) {
-//    draw_track(i - map_index, -1);
-//  };
-//
-//  draw_steep_mid_jump((TILE_SIZE * 8) - map_index);
-//    
-//  draw_track((TILE_SIZE * 11) - map_index, -1);
-//  draw_track((TILE_SIZE * 12) - map_index, 0);
-//  draw_track((TILE_SIZE * 13) - map_index, 1);
-//  draw_track((TILE_SIZE * 14) - map_index, 2);
-//  draw_track((TILE_SIZE * 15) - map_index, 3);
+
+  sprite.drawSelfMasked(4, SCREEN_HEIGHT - 12 - (lane * TILE_SIZE), ardurider, 0);
 
   if (arduboy.pressed(A_BUTTON)) {
     is_moving = true;
   } else {
     is_moving = false;
   }
-
   if (arduboy.pressed(B_BUTTON) and arduboy.pressed(A_BUTTON)) {
     map_index = 0;
     is_moving = false;
   }
-  
-
-
-//  draw_clear_track()
-//  draw_bump(10, 10);
-//  draw_jump(30, 10);
-//  draw_clear_track(80, 10, -1);
-//  draw_steep_short(90, 10);
-//  draw_steep_mid(100, 10);
+  if (arduboy.justPressed(UP_BUTTON)) {
+    (lane == 4) ? lane = 4 : lane += 1;
+  }
+    if (arduboy.justPressed(DOWN_BUTTON)) {
+    (lane == 1) ? lane = 1 : lane -= 1;
+  }
 }
