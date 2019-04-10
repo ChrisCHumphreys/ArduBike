@@ -340,33 +340,69 @@ void draw_steep_mid_jump(int x) {
   sprite.drawSelfMasked(x + (TILE_SIZE * 2), y_location + (TILE_SIZE * 5), tile_sheet, 17);
 }
 
-void draw_track(int trackName[], unsigned int map_index) {
-  int counter = 0;
-  int obstacle_offset = 0;
-  
-  while (*(trackName + counter) != FINISH) {
-    if (*(trackName + counter) == CLEAR) {
-      draw_track((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE), -1);
-    } else if (*(trackName + counter) == MUD1) {
-      draw_track((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE), 0);
-    } else if (*(trackName + counter) == MUD2) {
-      draw_track((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE), 1);
-    } else if (*(trackName + counter) == MUD3) {
-      draw_track((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE), 2);
-    } else if (*(trackName + counter) == MUD4) {
-      draw_track((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE), 3);
-    } else if (*(trackName + counter) == BUMP) {
-      draw_steep_short_jump((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE));
-    } else if (*(trackName + counter) == JUMP) {
-      draw_steep_mid_jump((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE));
-      obstacle_offset += 2;
-    } else if (*(trackName + counter) == HUMP) {
-      draw_flat_jump((TILE_SIZE * counter) - map_index + (obstacle_offset * TILE_SIZE));
-      obstacle_offset += 3;
-    }
-    counter += 1;
-    
+int get_x_map_location(int counter, int map_index) {
+  return (TILE_SIZE * counter) - map_index;
+}
+
+bool is_current(int counter, int map_index) {
+  // 20 pixels is location of riders front wheel
+  if (get_x_map_location(counter, map_index) == 19) {
+    return true;
+  } else {
+    return false;
   }
+}
+
+int draw_track(int trackName[], unsigned int map_index) {
+  int counter = 0;
+  int current_obstacle;
+
+  // Loop through array printing to screen current obstaclse
+  while (*(trackName + counter) != FINISH) {
+    switch (*(trackName + counter)) {
+      case CLEAR:
+        draw_track(get_x_map_location(counter, map_index), -1);
+        if (is_current(counter, map_index)) current_obstacle = CLEAR;
+        counter += 1;
+        break;
+      case MUD1:
+        draw_track(get_x_map_location(counter, map_index), 0);
+        if (is_current(counter, map_index)) current_obstacle = MUD1;
+        counter += 1;
+        break;
+      case MUD2:
+        draw_track(get_x_map_location(counter, map_index), 1);
+        if (is_current(counter, map_index)) current_obstacle = MUD2;
+        counter += 1;
+        break;
+      case MUD3:
+        draw_track(get_x_map_location(counter, map_index), 2);
+        if (is_current(counter, map_index)) current_obstacle = MUD3;
+        counter += 1;
+        break;
+      case MUD4:
+        draw_track(get_x_map_location(counter, map_index), 3);
+        if (is_current(counter, map_index)) current_obstacle = MUD4;
+        counter += 1;
+        break;
+      case BUMP:
+        draw_steep_short_jump(get_x_map_location(counter, map_index));
+        if (is_current(counter, map_index)) current_obstacle = BUMP;
+        counter += 1;
+        break;
+      case JUMP:
+        draw_steep_mid_jump(get_x_map_location(counter, map_index));
+        if (is_current(counter, map_index)) current_obstacle = JUMP;
+        counter += 3;
+        break;
+      case HUMP:
+        draw_flat_jump(get_x_map_location(counter, map_index));
+        if (is_current(counter, map_index)) current_obstacle = HUMP;
+        counter += 4; 
+        break;
+    }
+  }
+  return current_obstacle;
 }
 
 

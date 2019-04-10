@@ -11,4 +11,8 @@
 #define HUMP          7
 #define FINISH        -1
 
+#define FLAT          0
+#define LOW_INCLINE   1
+#define STEEP_INCLINE 2
+
 #endif
